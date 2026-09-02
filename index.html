@@ -8,8 +8,8 @@
   <title>KLN 94 Web Trainer</title>
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script type="module" crossorigin src="./assets/index-BiM0FV7a.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CnqTH51G.css">
+  <script type="module" crossorigin src="./assets/index-D2xgC3J7.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-OF62t4KC.css">
 </head>
 <body>
   <div class="training-ribbon" role="note">TRAINING ONLY · NOT FOR NAVIGATION · NOT FAA APPROVED</div>
@@ -26,7 +26,47 @@
   </header>
 
   <main>
-    <section class="trainer-shell" aria-label="KLN 94 faceplate">
+    <nav class="view-switcher" aria-label="Trainer view">
+      <span>DISPLAY</span>
+      <button type="button" data-view-mode="dual" aria-pressed="true">Dual trainer</button>
+      <button type="button" data-view-mode="cockpit" aria-pressed="false">Cockpit</button>
+      <button type="button" data-view-mode="gps" aria-pressed="false">GPS close-up</button>
+    </nav>
+
+    <section class="cockpit-shell cockpit-view" aria-labelledby="cockpitTitle">
+      <div class="cockpit-heading">
+        <div><p class="eyebrow">Second synchronized simulator view</p><h2 id="cockpitTitle">Piper-style steam-gauge cockpit</h2></div>
+        <div class="cockpit-live"><span class="live-dot"></span><strong id="cockpitStatus">PAUSED</strong><span>KLN 94 mirrored live</span></div>
+      </div>
+      <div class="cockpit-stage">
+        <canvas id="cockpitCanvas" width="1400" height="820" aria-label="Simulated Piper-style cockpit with San Diego scenery and steam gauges"></canvas>
+        <div class="cockpit-kln" aria-label="Synchronized compact KLN 94">
+          <div class="cockpit-kln-brand"><span>BENDIX/KING</span><strong>KLN 94</strong></div>
+          <canvas id="cockpitKlnScreen" width="840" height="300" aria-label="Mirrored KLN 94 display"></canvas>
+          <div class="cockpit-kln-keys">
+            <button data-action="PROC">PROC</button><button data-action="DTO">D→</button><button data-action="NRST">NRST</button><button data-action="OBS">OBS</button>
+            <button data-action="CRSR">CRSR</button><button data-action="CLR">CLR</button><button data-action="ENT">ENT</button><button data-action="MNU">MNU</button>
+          </div>
+          <div class="cockpit-knobs">
+            <button data-action="OUTER_CCW" aria-label="Outer knob counterclockwise">OUTER ◀</button><button data-action="OUTER_CW" aria-label="Outer knob clockwise">OUTER ▶</button>
+            <button data-action="INNER_CCW" aria-label="Inner knob counterclockwise">INNER −</button><button data-action="INNER_CW" aria-label="Inner knob clockwise">INNER +</button>
+          </div>
+        </div>
+      </div>
+      <div class="cockpit-controls" aria-label="Cockpit flight controls">
+        <div class="yoke-pad">
+          <span>YOKE / JOYSTICK</span>
+          <button type="button" data-sim-action="PITCH_UP" aria-label="Pitch up">▲</button>
+          <div><button type="button" data-sim-action="BANK_LEFT" aria-label="Bank left">◀</button><button type="button" data-sim-action="CENTER" aria-label="Center controls">CENTER</button><button type="button" data-sim-action="BANK_RIGHT" aria-label="Bank right">▶</button></div>
+          <button type="button" data-sim-action="PITCH_DOWN" aria-label="Pitch down">▼</button>
+        </div>
+        <label class="throttle-control">THROTTLE / AIRSPEED <input id="cockpitThrottle" type="range" min="0" max="180" step="1" value="120"><strong id="cockpitSpeed">120 KT</strong></label>
+        <div class="cockpit-quick-actions"><button id="cockpitFlyToggle" class="primary">Start flying</button><button type="button" data-sim-action="LEVEL" class="secondary">Wings level</button></div>
+      </div>
+      <p class="cockpit-note">Generic Piper-style training layout. Instruments, radio placement and engine indications vary by aircraft. Training only—not for flight or aircraft-specific checkout.</p>
+    </section>
+
+    <section class="trainer-shell gps-view" aria-label="KLN 94 faceplate">
       <div class="faceplate-scroll">
         <div class="faceplate">
           <div class="side left-side">
