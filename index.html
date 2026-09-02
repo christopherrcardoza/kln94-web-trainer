@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101317">
+  <link rel="icon" href="data:,">
+  <title>KLN 94 Web Trainer</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script type="module" crossorigin src="./assets/index-BiM0FV7a.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CnqTH51G.css">
+</head>
+<body>
+  <div class="training-ribbon" role="note">TRAINING ONLY · NOT FOR NAVIGATION · NOT FAA APPROVED</div>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Bendix/King workflow practice</p>
+      <h1>KLN 94 Web Trainer</h1>
+      <p class="lede">Practice buttonology with a deterministic GPS and a separate aircraft simulator.</p>
+    </div>
+    <div class="session-actions">
+      <button id="lessonBtn" class="secondary">Start Direct-To lesson</button>
+      <button id="resetSession" class="secondary">Reset session</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="trainer-shell" aria-label="KLN 94 faceplate">
+      <div class="faceplate-scroll">
+        <div class="faceplate">
+          <div class="side left-side">
+            <div class="annunciator" id="powerLed" aria-label="power indicator"></div>
+            <button class="hardware-button proc" data-action="PROC">PROC</button>
+            <div class="power-cluster">
+              <span>PUSH ON</span>
+              <div class="brightness-controls">
+                <button class="knob-button mini" data-action="BRT_DOWN" aria-label="brightness down">−</button>
+                <button class="power-knob" data-action="POWER" aria-label="push power on or off"><span>BRT</span></button>
+                <button class="knob-button mini" data-action="BRT_UP" aria-label="brightness up">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="display-stack">
+            <div class="display-bezel">
+              <canvas id="klnScreen" width="840" height="300" aria-label="KLN 94 simulated screen"></canvas>
+            </div>
+            <div class="bottom-keys">
+              <button data-action="MSG">MSG</button>
+              <button data-action="OBS">OBS</button>
+              <button data-action="ALT">ALT</button>
+              <button data-action="NRST">NRST</button>
+              <button data-action="DTO" aria-label="Direct To">D→</button>
+              <button data-action="CLR">CLR</button>
+              <button data-action="ENT">ENT</button>
+              <button data-action="MNU">MNU</button>
+            </div>
+          </div>
+
+          <div class="side right-side">
+            <div class="brand">BENDIX/KING<br><strong>KLN 94</strong><br><span>GPS</span></div>
+            <button class="hardware-button" data-action="CRSR">CRSR</button>
+            <div class="concentric-knob" aria-label="right concentric knob controls">
+              <button data-action="OUTER_CCW" class="turn outer-ccw" aria-label="outer knob counterclockwise">◀</button>
+              <button data-action="OUTER_CW" class="turn outer-cw" aria-label="outer knob clockwise">▶</button>
+              <button data-action="INNER_CCW" class="turn inner-ccw" aria-label="inner knob counterclockwise">−</button>
+              <button data-action="INNER_CW" class="turn inner-cw" aria-label="inner knob clockwise">+</button>
+              <button class="knob-core" data-action="SCAN_TOGGLE" aria-label="pull or push inner knob for waypoint scan"><span>INNER</span><small>OUTER</small></button>
+            </div>
+            <div class="scan-label">PULL SCAN</div>
+          </div>
+        </div>
+      </div>
+      <div class="status-strip">
+        <span id="modeHelp">NAV 4 · LEG</span>
+        <span id="interactionHelp">Outer: page group · Inner: page number · CRSR: edit</span>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <article class="map-card">
+        <div class="card-heading">
+          <div><p class="eyebrow">External aircraft view</p><h2>Scenario map</h2></div>
+          <label>Base layer
+            <select id="mapLayer"><option value="osm">OpenStreetMap fallback</option><option value="faa" disabled>FAA VFR tiles (import required)</option></select>
+          </label>
+        </div>
+        <div id="map" aria-label="external moving map"></div>
+        <div class="map-legend"><span class="route-key">Flight plan</span><span class="active-key">Active leg</span><span>FAA-derived demo identifiers · procedure geometry is training data</span></div>
+      </article>
+
+      <aside class="instructor-panel">
+        <div class="card-heading"><div><p class="eyebrow">Instructor station</p><h2>Aircraft & scenario</h2></div><span id="saveState" class="save-state">Saved locally</span></div>
+        <div class="control-grid">
+          <label>Heading <input id="heading" type="number" min="0" max="359" value="90"><span>°</span></label>
+          <label>Groundspeed <input id="speed" type="number" min="0" max="350" value="120"><span>kt</span></label>
+          <label>Altitude <input id="altitude" type="number" min="0" max="45000" step="100" value="2500"><span>ft</span></label>
+          <label class="toggle-label"><input id="followLeg" type="checkbox"> Follow active leg</label>
+        </div>
+        <div class="button-row">
+          <button id="flyToggle" class="primary">Start flying</button>
+          <button id="reposition" class="secondary">Reposition KMYF</button>
+        </div>
+
+        <section class="instructor-section integrity-panel">
+          <div class="section-heading"><h3>IFR training conditions</h3><span>simulation switches</span></div>
+          <p class="section-copy">Use these switches to practice database, RAIM and NAV/GPS source checks. They affect the trainer's approach state.</p>
+          <div class="condition-grid">
+            <button id="toggleDatabase" class="condition-button" type="button"></button>
+            <button id="toggleIntegrity" class="condition-button" type="button"></button>
+            <button id="toggleCdiSource" class="condition-button" type="button"></button>
+          </div>
+        </section>
+
+        <section class="instructor-section">
+          <h3>Active navigation</h3>
+          <div id="navSummary" class="readout-grid"></div>
+        </section>
+
+        <section class="instructor-section">
+          <div class="section-heading"><h3>FPL 0</h3><span>Use the faceplate to edit</span></div>
+          <ol id="flightPlan" class="flight-plan"></ol>
+        </section>
+
+        <section class="instructor-section">
+          <div class="section-heading"><h3>Training database</h3><span id="dbCount"></span></div>
+          <label class="search-label">Find an identifier <input id="databaseSearch" maxlength="8" placeholder="KSEE / OCN / JLI"></label>
+          <div id="dbResults" class="db-results"></div>
+        </section>
+
+        <section class="instructor-section lesson-card" id="lessonCard" hidden>
+          <div class="section-heading"><h3>Guided lesson</h3><span id="lessonScore">0 / 4</span></div>
+          <p id="lessonInstruction"></p>
+          <ol id="lessonSteps"></ol>
+          <button id="stopLesson" class="secondary">End lesson</button>
+        </section>
+
+        <section class="instructor-section">
+          <div class="section-heading"><h3>Event log</h3><button id="clearLog" class="text-button">Clear</button></div>
+          <div id="eventLog" class="event-log" aria-live="polite"></div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="reference-card" aria-labelledby="referenceTitle">
+      <div class="card-heading">
+        <div><p class="eyebrow">Operating reference</p><h2 id="referenceTitle">KLN 94 training syllabus</h2></div>
+        <a class="guide-link" href="https://www.bendixking.com/content/dam/bendixking/en/documents/document-lists/downloads-and-manuals/006-18207-0000-KLN-94-Pilots-Guide.pdf" target="_blank" rel="noreferrer">Official Pilot's Guide</a>
+      </div>
+      <p class="reference-intro">Use the trainer to practice the real interaction model: cursor off selects pages, cursor on edits fields, and the pulled inner knob scans waypoints. Procedure data in this site remains explicitly marked TRAINING.</p>
+      <div class="module-grid">
+        <article><strong>1. GPS awareness</strong><span>NAV pages, position, distance, bearing, groundspeed and nearest-airport use.</span></article>
+        <article><strong>2. Direct-To</strong><span>D→, enter the identifier, review the waypoint, then press ENT again to activate.</span></article>
+        <article><strong>3. More than Direct-To</strong><span>APT, VOR, NDB, INT and USR pages; nearest and user-waypoint workflows.</span></article>
+        <article><strong>4. Model-T approaches</strong><span>Choose the IAF that matches the arrival sector and understand IAF, IF, FAF and MAP roles.</span></article>
+        <article><strong>5. DPs and STARs</strong><span>Use PROC to choose the procedure and transition and place the fixes into FPL 0.</span></article>
+        <article><strong>6. Flight plans</strong><span>Create, edit and activate FPL 0; use LEG sequencing and scan upcoming waypoints.</span></article>
+        <article><strong>7. GPS for IFR</strong><span>Check database currency, RAIM integrity, CDI source and automatic sensitivity changes.</span></article>
+        <article><strong>8. RNAV chart format</strong><span>Match chart fixes and LNAV minimums to the procedure waypoints loaded in the unit.</span></article>
+        <article><strong>9. Vectors and overlays</strong><span>Practice VTF and distinguish GPS overlays from stand-alone RNAV approaches.</span></article>
+        <article><strong>10. Fly the approach</strong><span>LOADED → APR ARM → APR ACTV → MAP suspend; use OBS/LEG correctly and command the miss.</span></article>
+      </div>
+      <div class="limits-callout"><strong>Modeled limits:</strong> LNAV lateral guidance only; no LPV glidepath. An expired database or lost RAIM blocks/downgrades approach use. Automatic sequencing stops at the MAP.</div>
+    </section>
+  </main>
+
+  <footer>
+    Behavioral reference: KLN 94 Pilot's Guide 006-18207-0000. This independent educational simulator is not affiliated with or approved by Honeywell, Bendix/King, or the FAA.
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</body>
+</html>
